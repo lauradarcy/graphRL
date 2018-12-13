@@ -14,7 +14,7 @@ class graph_tool_env(gym.Env):
     the adjacency matrix (? maybe, currently have obs space as the matrix)
     maybe step function just alters the given graph
     """
-    graph: Graph
+    metadata = {'render.modes': ['human', 'graph']}
 
     def __init__(self, network_size=10, input_nodes=3):
         self.network_size = network_size
@@ -27,13 +27,9 @@ class graph_tool_env(gym.Env):
         self.observation_space = spaces.MultiDiscrete(np.full((self.network_size, self.network_size), 2))
         # a square matrix of network size, full of the number 2, the multidiscrete space
         # will allow for numbers 0-1 (all positive less than 2)
-        self.timestep = 0
-        self.number = 0
-        self.guess_count = 0
-        self.guess_max = 200
-        self.observation = 0
+        self.time_step = 0
+        self.observation = adjacency(self.graph).toarray()
 
-        self.seed()
         self.reset()
 
     def render(self, mode='human'):
@@ -41,17 +37,32 @@ class graph_tool_env(gym.Env):
             # return graphtools graph object
             return self.graph
         elif mode == 'human':
-            filename = "./renders/render"+str(self.timestep)+".png"
-            graph_draw(g, vertex_text=g.vertex_index, vertex_font_size=18, output_size=(1000, 1000), output=filename)
+            filename = "./renders/render" + str(self.time_step) + ".png"
+            graph_draw(self.graph, vertex_text=self.graph.vertex_index, vertex_font_size=18,
+                       output_size=(1000, 1000), output=filename)
             pass
 
     def step(self, action):
         assert self.action_space.contains(action)
+        valid_source_nodes = [index for index, in_degree in
+                              enumerate(self.graph.get_in_degrees(self.graph.get_vertices())) if
+                              (in_degree > 0 or index < self.input_nodes)]
+        if action[0] not in valid_source_nodes:
+            raise ValueError('this action does not have a valid from node')
+        new_edge = self.graph.add_edge(action[0], action[1])
+        if not is_DAG(self.graph):
+            self.graph.remove_edge(new_edge)
+            raise ValueError('this action violates the DAG property')
+        self.observation = adjacency(self.graph).toarray()
+        if not self.observation_space.contains(self.observation):
+            self.graph.remove_edge(new_edge)
+            self.observation = adjacency(self.graph).toarray()
+            raise ValueError('this action makes a duplicate edge')
 
-        return self.observation, reward, done, {"number": self.number, "guesses": self.guess_count}
+        return self.observation, reward, done, {"time_step": self.time_step}
 
     def reset(self):
-        self.number = self.np_random.uniform(-self.range, self.range)
-        self.guess_count = 0
-        self.observation = 0
+        self.graph.clear_edges()
+        self.time_step = 0
+        self.observation = adjacency(self.graph).toarray()
         return self.observation
