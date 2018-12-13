@@ -6,7 +6,7 @@ import numpy as np
 from graph_tool.all import *
 
 
-class graph_tool_env(gym.Env):
+class graphRL(gym.Env):
     """
     will have fixed action space, but not all actions are valid within each state
     step function should have a function that tests if the chosen action is valid
