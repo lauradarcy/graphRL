@@ -182,10 +182,11 @@ should allow for possible valid state spaces. The state space for this tabular f
 ## `step(self, action)`:
 
 ```python
-    def step(self, action):
+        def step(self, action):
         assert self.action_space.contains(action)
-        valid_source_nodes = [index for index, in_degree in                         							enumerate(self.graph.get_in_degrees(self.graph.get_vertices()))
-                        if (in_degree > 0 or index < self.input_nodes)]
+        valid_source_nodes = [index for index, in_degree in
+                              enumerate(self.graph.get_in_degrees(self.graph.get_vertices())) if
+                              (in_degree > 0 or index < self.input_nodes)]
         if action[0] not in valid_source_nodes:
             raise ValueError('this action does not have a valid from node')
         new_edge = self.graph.add_edge(action[0], action[1])
