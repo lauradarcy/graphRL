@@ -7,12 +7,12 @@ This repository contains a PIP package which is an OpenAI environment for simula
 
 ## Installation
 
-Install the [OpenAI gym](https://gym.openai.com/docs/).
+this package depends on [graph-tool](https://graph-tool.skewed.de/), which is a python graph manipulation module written in C++. it isn't a pip installable package, so needs to be installed separately before using this package. the only other dependency is openAI's gym module.
 
-Then install this package via
+once graph-tool is installed, install this package via
 
 ```bash
-pip install -e .
+pip3 install graphRL
 ```
 
 ## Usage
